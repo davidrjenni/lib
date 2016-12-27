@@ -2,15 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package ds the contains implementations
-// of the data structures from
-//	http://opendatastructures.org.
-// It is not recommended to use this package.
 package ds
-
-// V represents a value
-// stored in a data structure.
-type V interface{}
 
 // --- Stack -------
 
@@ -126,7 +118,7 @@ func (a *Array) resize() {
 // on top of a slice.
 type Queue struct {
 	s []V // backing slice
-	r int // read index
+	r int // read offset
 	n int // number of elements
 }
 
