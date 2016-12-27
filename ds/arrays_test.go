@@ -103,6 +103,9 @@ func TestQueue(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		q.Enqueue(i)
+		if q.Len() != i+1 {
+			t.Errorf("want %d, got %d", i, q.Len())
+		}
 	}
 	if len(q.s) != maxcap {
 		t.Errorf("want %d, got %d", maxcap, len(q.s))
@@ -116,6 +119,9 @@ func TestQueue(t *testing.T) {
 		}
 		if r != i {
 			t.Errorf("want %d, got %v", i, r)
+		}
+		if q.Len() != n-i-1 {
+			t.Errorf("want %d, got %d", n-i-1, q.Len())
 		}
 	}
 

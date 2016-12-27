@@ -122,6 +122,10 @@ type Queue struct {
 	n int // number of elements
 }
 
+// Len returns the number
+// of elements in the queue.
+func (q *Queue) Len() int { return q.n }
+
 // Enqueue adds an element
 // to the head of the queue.
 //
