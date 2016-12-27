@@ -166,6 +166,120 @@ func (q *Queue) resize() {
 	q.r = 0
 }
 
+// --- Dequeue -------
+
+// Dequeue is a queue which allows
+// for efficient addition and removal
+// at both ends of the queue.
+type Dequeue struct {
+	s []V // backing slice
+	r int // read offset
+	n int // number of elements
+}
+
+// Len returns the number
+// of elements in the dequeue.
+func (d *Dequeue) Len() int { return d.n }
+
+// Get returns the element at the
+// given index.
+//
+// This operation has a time complexity of O(1).
+func (d *Dequeue) Get(i int) (V, bool) {
+	if i < 0 || i > d.n-1 {
+		return nil, false
+	}
+	return d.s[(d.r+i)%len(d.s)], true
+}
+
+// Set sets the element at the given
+// index and returns the old one.
+//
+// This operation has a time complexity of O(1).
+func (d *Dequeue) Set(i int, v V) (V, bool) {
+	if i < 0 || i > d.n-1 {
+		return nil, false
+	}
+	t := d.s[(d.r+i)%len(d.s)]
+	d.s[(d.r+i)%len(d.s)] = v
+	return t, true
+}
+
+// Add adds an element to the dequeue at
+// the given index and reports whether it
+// was successful or not. The dequeue is
+// resized as needed.
+//
+// This operation has an amortized time
+// complexity of O(min{i, n-i}).
+func (d *Dequeue) Add(i int, v V) bool {
+	if i < 0 || i > d.n {
+		return false
+	}
+	if d.n+1 > len(d.s) {
+		d.resize()
+	}
+	if i < d.n/2 {
+		// shift left one position
+		if d.r == 0 {
+			d.r = len(d.s) - 1
+		} else {
+			d.r--
+		}
+		for j := 0; j <= i-1; j++ {
+			d.s[(d.r+j)%len(d.s)] = d.s[(d.r+j+1)%len(d.s)]
+		}
+	} else {
+		// shift right one position
+		for j := d.n; j > i; j-- {
+			d.s[(d.r+j)%len(d.s)] = d.s[(d.r+j-1)%len(d.s)]
+		}
+	}
+	d.s[(d.r+i)%len(d.s)] = v
+	d.n++
+	return true
+}
+
+// Remove removes the element of the dequeue
+// at the given index and reports whether the
+// operation was successful or not. The dequeue
+// is resized as needed.
+//
+// This operation has an amortized time
+// complexity of O(min{i, n-i}).
+func (d *Dequeue) Remove(i int) (V, bool) {
+	if i < 0 || i > d.n-1 {
+		return nil, false
+	}
+	t := d.s[(d.r+i)%len(d.s)]
+	if i < d.n/2 {
+		// shift right one position
+		for j := i; j > 0; j-- {
+			d.s[(d.r+j)%len(d.s)] = d.s[(d.r+j-1)%len(d.s)]
+		}
+		d.r = (d.r + 1) % len(d.s)
+	} else {
+		// shift left one position
+		for j := i; j < d.n-1; j++ {
+			d.s[(d.r+j)%len(d.s)] = d.s[(d.r+j+1)%len(d.s)]
+		}
+	}
+	d.n--
+	if 3*d.n < len(d.s) {
+		d.resize()
+	}
+	return t, true
+}
+
+func (d *Dequeue) resize() {
+	s := make([]V, max(d.n*2, 1))
+	for i := 0; i < d.n; i++ {
+		s[i] = d.s[(d.r+i)%len(d.s)]
+	}
+	d.s = s
+	d.r = 0
+}
+
 // --- Utilities -------
 
 func max(a, b int) int {

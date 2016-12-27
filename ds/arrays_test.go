@@ -132,3 +132,80 @@ func TestQueue(t *testing.T) {
 		t.Errorf("want %d, got %d", mincap, len(q.s))
 	}
 }
+
+func TestDequeue(t *testing.T) {
+	const mincap, midcap, maxcap, n = 1, 84, 128, 65
+	var d Dequeue
+
+	if _, ok := d.Get(0); ok {
+		t.Errorf("no element at index 0")
+	}
+	if _, ok := d.Get(-1); ok {
+		t.Errorf("no element at index -1")
+	}
+
+	if _, ok := d.Set(0, 1); ok {
+		t.Errorf("no element to set at index 0")
+	}
+	if _, ok := d.Set(-1, 1); ok {
+		t.Errorf("no element to set at index -1")
+	}
+
+	if _, ok := d.Remove(0); ok {
+		t.Errorf("no element to remove at index 0")
+	}
+	if _, ok := d.Remove(-1); ok {
+		t.Errorf("no element to remove at index -1")
+	}
+
+	for i := 0; i < n; i++ {
+		if ok := d.Add(i, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+	}
+	if d.Len() != n {
+		t.Errorf("want %d, got %d", n, d.Len())
+	}
+	if len(d.s) != maxcap {
+		t.Errorf("want %d, got %d", maxcap, len(d.s))
+	}
+
+	for i := 0; i < n; i++ {
+		v, ok := d.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		d.Set(i, v.(int)*v.(int))
+	}
+
+	for i := n - 1; i >= 0; i -= 2 {
+		r, ok := d.Remove(i)
+		if !ok {
+			t.Errorf("cannot remove: %d", i)
+			continue
+		}
+		if r != i*i {
+			t.Errorf("want %d, got %v", i*i, r)
+		}
+	}
+
+	if d.Len() != n/2 {
+		t.Errorf("want %d, got %d", n/2, d.Len())
+	}
+	if len(d.s) != midcap {
+		t.Errorf("want %d, got %d", midcap, len(d.s))
+	}
+
+	for i := 0; i < n/2+1; i++ {
+		if ok := d.Add(i*2, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+	}
+	if d.Len() != n {
+		t.Errorf("want %d, got %d", n, d.Len())
+	}
+	if len(d.s) != midcap {
+		t.Errorf("want %d, got %d", midcap, len(d.s))
+	}
+}
