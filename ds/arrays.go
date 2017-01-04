@@ -4,6 +4,8 @@
 
 package ds
 
+import "math"
+
 // --- Stack -------
 
 // Stack implements a stack
@@ -278,6 +280,100 @@ func (d *Dequeue) resize() {
 	}
 	d.s = s
 	d.r = 0
+}
+
+// --- RootishStack -------
+
+// RootishStack uses arrays in
+// arrays to store elements and
+// wastes at most O(sqrt(n)) space
+// when storing n items.
+type RootishStack struct {
+	b Dequeue // backing blocks
+	n int     // number of elements
+}
+
+// Get returns the element at the
+// given index.
+//
+// This operation has a time complexity of O(1).
+func (r *RootishStack) Get(i int) (V, bool) {
+	if i < 0 || i > r.n-1 {
+		return nil, false
+	}
+	b := i2b(i)
+	a, _ := r.b.Get(b)
+	return a.([]V)[i-b*(b+1)/2], true
+}
+
+// Set sets the element at the given
+// index and returns the old one.
+//
+// This operation has a time complexity of O(1).
+func (r *RootishStack) Set(i int, v V) (V, bool) {
+	if i < 0 || i > r.n-1 {
+		return nil, false
+	}
+	b := i2b(i)
+	j := i - b*(b+1)/2
+	a, _ := r.b.Get(b)
+	t := a.([]V)[j]
+	a.([]V)[j] = v
+	return t, true
+}
+
+// Add adds an element to the stack at
+// the given index and reports whether it
+// was successful or not. The stack is
+// resized as needed.
+//
+// This operation has an amortized time
+// complexity of O(n-i).
+func (r *RootishStack) Add(i int, v V) bool {
+	if i < 0 || i > r.n {
+		return false
+	}
+	if l := r.b.Len(); l*(l+1)/2 < r.n+1 {
+		r.b.Add(r.b.Len(), V(make([]V, r.b.Len()+1)))
+	}
+	r.n++
+	for j := r.n - 1; j > i; j-- {
+		p, _ := r.Get(j - 1)
+		r.Set(j, p)
+	}
+	r.Set(i, v)
+	return true
+}
+
+// Remove removes the element of the stack
+// at the given index and reports whether the
+// operation was successful or not. The stack
+// is resized as needed.
+//
+// This operation has an amortized time
+// complexity of O(n-i).
+func (r *RootishStack) Remove(i int) (V, bool) {
+	if i < 0 || i > r.n-1 {
+		return nil, false
+	}
+	t, _ := r.Get(i)
+	for j := i; j < r.n-1; j++ {
+		p, _ := r.Get(j + 1)
+		r.Set(j, p)
+	}
+	r.n--
+	for l := r.b.Len(); l > 0 && (l-2)*(l-1)/2 >= r.n; l-- {
+		r.b.Remove(r.b.Len() - 1)
+	}
+	return t, true
+}
+
+// Len returns the number
+// of elements in the stack.
+func (r *RootishStack) Len() int { return r.n }
+
+func i2b(i int) int {
+	return int(math.Ceil((-3 + math.Sqrt(9+8*float64(i))) / 2.0))
 }
 
 // --- Utilities -------

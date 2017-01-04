@@ -209,3 +209,71 @@ func TestDequeue(t *testing.T) {
 		t.Errorf("want %d, got %d", midcap, len(d.s))
 	}
 }
+
+func TestRootishStack(t *testing.T) {
+	const n = 65
+	var r RootishStack
+
+	if _, ok := r.Get(0); ok {
+		t.Errorf("no element at index 0")
+	}
+	if _, ok := r.Get(-1); ok {
+		t.Errorf("no element at index -1")
+	}
+
+	if _, ok := r.Set(0, 1); ok {
+		t.Errorf("no element to set at index 0")
+	}
+	if _, ok := r.Set(-1, 1); ok {
+		t.Errorf("no element to set at index -1")
+	}
+
+	if _, ok := r.Remove(0); ok {
+		t.Errorf("no element to remove at index 0")
+	}
+	if _, ok := r.Remove(-1); ok {
+		t.Errorf("no element to remove at index -1")
+	}
+
+	for i := 0; i < n; i++ {
+		if ok := r.Add(i, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+	}
+	if r.Len() != n {
+		t.Errorf("want %d, got %d", n, r.Len())
+	}
+
+	for i := 0; i < n; i++ {
+		v, ok := r.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		r.Set(i, v.(int)*v.(int))
+	}
+
+	for i := n - 1; i >= 0; i -= 2 {
+		x, ok := r.Remove(i)
+		if !ok {
+			t.Errorf("cannot remove: %d", i)
+			continue
+		}
+		if x != i*i {
+			t.Errorf("want %d, got %v", i*i, x)
+		}
+	}
+
+	if r.Len() != n/2 {
+		t.Errorf("want %d, got %d", n/2, r.Len())
+	}
+
+	for i := 0; i < n/2+1; i++ {
+		if ok := r.Add(i*2, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+	}
+	if r.Len() != n {
+		t.Errorf("want %d, got %d", n, r.Len())
+	}
+}
