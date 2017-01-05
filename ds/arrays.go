@@ -88,6 +88,36 @@ func (a *Array) Add(i int, v V) bool {
 	return true
 }
 
+func (a *Array) addAll(o Array) {
+	n := o.n + a.n
+	if n > len(a.s) {
+		s := make([]V, n)
+		copy(s, a.s)
+		a.s = s
+	}
+	copy(a.s[a.n:], o.s)
+	a.n = n
+}
+
+func (a *Array) reverse() {
+	for i, j := 0, a.n-1; i < j; i, j = i+1, j-1 {
+		a.s[i], a.s[j] = a.s[j], a.s[i]
+	}
+}
+
+func (a *Array) sub(f, t int) Array {
+	var o Array
+	/*
+		if f < 0 || t > a.n || f > t {
+			panic()
+		}
+	*/
+	o.n = t - f
+	o.s = make([]V, o.n)
+	copy(o.s, a.s[f:t])
+	return o
+}
+
 // Remove removes the element of the array
 // at the given index and reports whether the
 // operation was successful or not. The array
@@ -96,7 +126,7 @@ func (a *Array) Add(i int, v V) bool {
 // This operation has an amortized time
 // complexity of O(n-i).
 func (a *Array) Remove(i int) (V, bool) {
-	if i < 0 || i > a.n {
+	if i < 0 || i > a.n-1 {
 		return nil, false
 	}
 	v := a.s[i]
@@ -281,6 +311,105 @@ func (d *Dequeue) resize() {
 	d.s = s
 	d.r = 0
 }
+
+// --- DualDequeue -------
+
+// DualDequeue implements
+// a dequeue by combining
+// two dynamic arrays.
+type DualDequeue struct {
+	f, b Array // backing arrays
+}
+
+// Get returns the element at the
+// given index.
+//
+// This operation has a time complexity of O(1).
+func (d *DualDequeue) Get(i int) (V, bool) {
+	l := d.f.Len()
+	if i < l {
+		return d.f.Get(l - i - 1)
+	}
+	return d.b.Get(i - l)
+}
+
+// Set sets the element at the given
+// index and returns the old one.
+//
+// This operation has a time complexity of O(1).
+func (d *DualDequeue) Set(i int, v V) (V, bool) {
+	l := d.f.Len()
+	if i < l {
+		return d.f.Set(l-i-1, v)
+	}
+	return d.b.Set(i-l, v)
+}
+
+// Add adds an element to the dual dequeue at
+// the given index and reports whether it was
+// was successful or not. The dual dequeue is
+// resized as needed.
+//
+// This operation has an amortized time
+// complexity of O(min{i, n-i}).
+func (d *DualDequeue) Add(i int, v V) bool {
+	if l := d.f.Len(); i < l {
+		d.f.Add(l-i, v)
+	} else {
+		d.b.Add(i-l, v)
+	}
+	d.balance()
+	return true
+}
+
+// Remove removes the element of the dual dequeue
+// at the given index and reports whether the operation
+// was successful or not. The dual dequeue is resized
+// as needed.
+//
+// This operation has an amortized time
+// complexity of O(min{i, n-i}).
+func (d *DualDequeue) Remove(i int) (V, bool) {
+	var t V
+	var ok bool
+	if l := d.f.Len(); i < l {
+		t, ok = d.f.Remove(l - i - 1)
+		if !ok {
+			return nil, false
+		}
+	} else {
+		t, ok = d.b.Remove(i - l)
+		if !ok {
+			return nil, false
+		}
+	}
+	d.balance()
+	return t, true
+}
+
+func (d *DualDequeue) balance() {
+	if 3*d.f.Len() < d.b.Len() {
+		var f, b Array
+		s := d.Len()/2 - d.f.Len()
+		f.addAll(d.b.sub(0, s))
+		f.reverse()
+		f.addAll(d.f)
+		b.addAll(d.b.sub(s, d.b.Len()))
+		d.f, d.b = f, b
+	} else if 3*d.b.Len() < d.f.Len() {
+		var f, b Array
+		s := d.f.Len() - d.Len()/2
+		f.addAll(d.f.sub(s, d.f.Len()))
+		b.addAll(d.f.sub(0, s))
+		b.reverse()
+		b.addAll(d.b)
+		d.f, d.b = f, b
+	}
+}
+
+// Len returns the number of
+// elements in the dual dequeue.
+func (d *DualDequeue) Len() int { return d.f.Len() + d.b.Len() }
 
 // --- RootishStack -------
 

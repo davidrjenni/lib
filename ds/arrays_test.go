@@ -24,6 +24,13 @@ func TestArray(t *testing.T) {
 		t.Errorf("no element to set at index -1")
 	}
 
+	if _, ok := a.Remove(0); ok {
+		t.Errorf("no element to remove at index 0")
+	}
+	if _, ok := a.Remove(-1); ok {
+		t.Errorf("no element to remove at index -1")
+	}
+
 	for i := 0; i < n; i++ {
 		if ok := a.Add(i, i); !ok {
 			t.Errorf("cannot add: %d", i)
@@ -43,6 +50,50 @@ func TestArray(t *testing.T) {
 			continue
 		}
 		a.Set(i, v.(int)*v.(int))
+	}
+
+	a.reverse()
+	for i := 0; i < n; i++ {
+		v, ok := a.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		if e := (n - i - 1) * (n - i - 1); v != e {
+			t.Errorf("want %d, got %v", e, v)
+		}
+	}
+	a.reverse()
+
+	var o Array
+	o.addAll(a)
+	for i := 0; i < n; i++ {
+		v, ok := o.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		if v != i*i {
+			t.Errorf("want %d, got %v", i*i, v)
+		}
+	}
+	if o.Len() != a.Len() {
+		t.Errorf("want %d, got %d", a.Len(), o.Len())
+	}
+
+	o = o.sub(0, o.Len()/2)
+	if o.Len() != n/2 {
+		t.Errorf("want %d, got %d", n/2, o.Len())
+	}
+	for i := 0; i < n/2; i++ {
+		v, ok := o.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		if v != i*i {
+			t.Errorf("want %d, got %v", i*i, v)
+		}
 	}
 
 	for i := n - 1; i >= 0; i -= 2 {
@@ -275,5 +326,76 @@ func TestRootishStack(t *testing.T) {
 	}
 	if r.Len() != n {
 		t.Errorf("want %d, got %d", n, r.Len())
+	}
+}
+
+func TestDualDequeue(t *testing.T) {
+	const n = 65
+	var d DualDequeue
+
+	if _, ok := d.Get(0); ok {
+		t.Errorf("no element at index 0")
+	}
+	if _, ok := d.Get(-1); ok {
+		t.Errorf("no element at index -1")
+	}
+
+	if _, ok := d.Set(0, 1); ok {
+		t.Errorf("no element to set at index 0")
+	}
+	if _, ok := d.Set(-1, 1); ok {
+		t.Errorf("no element to set at index -1")
+	}
+
+	if _, ok := d.Remove(0); ok {
+		t.Errorf("no element to remove at index 0")
+	}
+	if _, ok := d.Remove(-1); ok {
+		t.Errorf("no element to remove at index -1")
+	}
+
+	for i := 0; i < n; i++ {
+		if ok := d.Add(i, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+		if d.Len() != i+1 {
+			t.Errorf("want %d, got %d", i+1, d.Len())
+		}
+	}
+	if d.Len() != n {
+		t.Errorf("want %d, got %d", n, d.Len())
+	}
+
+	for i := 0; i < n; i++ {
+		v, ok := d.Get(i)
+		if !ok {
+			t.Errorf("not found: %d", i)
+			continue
+		}
+		d.Set(i, v.(int)*v.(int))
+	}
+
+	for i := n - 1; i >= 0; i -= 2 {
+		x, ok := d.Remove(i)
+		if !ok {
+			t.Errorf("cannot remove: %d", i)
+			continue
+		}
+		if x != i*i {
+			t.Errorf("want %d, got %v", i*i, x)
+		}
+	}
+
+	if d.Len() != n/2 {
+		t.Errorf("want %d, got %d", n/2, d.Len())
+	}
+
+	for i := 0; i < n/2+1; i++ {
+		if ok := d.Add(i*2, i); !ok {
+			t.Errorf("cannot add: %d", i)
+		}
+	}
+	if d.Len() != n {
+		t.Errorf("want %d, got %d", n, d.Len())
 	}
 }
