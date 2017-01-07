@@ -91,17 +91,16 @@ type DList struct {
 // get returns the node at the
 // given index or nil if not found.
 func (l *DList) get(i int) *dnode {
-	var n *dnode
 	if i < l.n/2 {
-		n = l.r.n
+		n := l.r.n
 		for j := 0; j < i; j++ {
 			n = n.n
 		}
-	} else {
-		n = l.r
-		for j := l.n; j > i; j-- {
-			n = n.p
-		}
+		return n
+	}
+	n := l.r
+	for j := l.n; j > i; j-- {
+		n = n.p
 	}
 	return n
 }
