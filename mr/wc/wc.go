@@ -26,7 +26,10 @@ func (w wordCount) Map(key, value string, out chan<- mr.Tuple) {
 	s := bufio.NewScanner(strings.NewReader(value))
 	s.Split(bufio.ScanWords)
 	for s.Scan() {
-		out <- mr.Tuple{s.Text(), "1"}
+		out <- mr.Tuple{
+			First:  s.Text(),
+			Second: "1",
+		}
 	}
 	if err := s.Err(); err != nil {
 		log.Println("map error: ", err)
@@ -43,7 +46,10 @@ func (w wordCount) Reduce(key string, values []string, out chan<- mr.Tuple) {
 			c += n
 		}
 	}
-	out <- mr.Tuple{key, strconv.Itoa(c)}
+	out <- mr.Tuple{
+		First:  key,
+		Second: strconv.Itoa(c),
+	}
 }
 
 func main() {
