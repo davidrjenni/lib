@@ -7,7 +7,7 @@ package ds
 import "testing"
 
 func TestArray(t *testing.T) {
-	const mincap, midcap, maxcap, n = 1, 84, 128, 65
+	const midcap, maxcap, n = 84, 128, 65
 	var a Array
 
 	if _, ok := a.Get(0); ok {
@@ -185,7 +185,7 @@ func TestQueue(t *testing.T) {
 }
 
 func TestDequeue(t *testing.T) {
-	const mincap, midcap, maxcap, n = 1, 84, 128, 65
+	const midcap, maxcap, n = 84, 128, 65
 	var d Dequeue
 
 	if _, ok := d.Get(0); ok {
